@@ -51,6 +51,8 @@ end
 writer = CsvWriter.new
 writer.write(out,"out.csv")
 
+downloader = FileDownloader.new("path")
+downloader.download(out)
 
 
 
