@@ -23,7 +23,7 @@ parsed = JSON.parse(response.body)
 
 i = 1
 pages = parsed["paging"]["pages"]
-pages =1
+
 out = Array.new
 
 name_finder = RealNameFinder.new("https://slack.com/api/users.list",token)
@@ -46,7 +46,7 @@ while i <= pages  do
                 file['url_private_download'],
                 file['channels'],
                 name_finder.find_name(file['user']),
-                Time.at(file['timestamp']).to_datetime.strftime('%F'),
+                Time.at(file['timestamp']).to_datetime.strftime('%FT%H_%M_%S'),
                 file['num_stars'],
                 file['name']
             ))
