@@ -3,11 +3,15 @@ require "uri"
 require 'rubygems'
 require 'json'
 require 'csv'
+require 'date'
+
 
 require_relative "domain/slack_file"
 require_relative "services/csv_writer"
+require_relative "services/file_downloader"
+require_relative "services/real_name_finder"
 
-token = "xoxp-3633760318-3633833010-238631105570-2e5fb4cbe9f2b60f484bd047a25c0381"
+token = ARGV[0] 
 uri = URI.parse("https://slack.com/api/files.list?token=#{token}")
 http = Net::HTTP.new(uri.host, uri.port)
 http.use_ssl = true
@@ -19,8 +23,12 @@ parsed = JSON.parse(response.body)
 
 i = 1
 pages = parsed["paging"]["pages"]
-
+pages =1
 out = Array.new
+
+name_finder = RealNameFinder.new("https://slack.com/api/users.list",token)
+
+
 while i <= pages  do
     puts "processing page #{i}/#{pages}"
     uri = URI.parse("https://slack.com/api/files.list?token=#{token}&page=#{i}")
@@ -37,9 +45,10 @@ while i <= pages  do
             out.push( SlackFile.new(
                 file['url_private_download'],
                 file['channels'],
-                file['user'],
-                file['timestamp'],
-                file['num_stars']
+                name_finder.find_name(file['user']),
+                Time.at(file['timestamp']).to_datetime.strftime('%F'),
+                file['num_stars'],
+                file['name']
             ))
         end
     }
@@ -51,7 +60,7 @@ end
 writer = CsvWriter.new
 writer.write(out,"out.csv")
 
-downloader = FileDownloader.new("path")
+downloader = FileDownloader.new("./fichiers/",token)
 downloader.download(out)
 
 
